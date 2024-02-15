@@ -1,11 +1,13 @@
-use std::{fs::File, io::{BufReader, Bytes, Read}};
+use std::{collections::HashMap, fs::File, io::{BufReader, Read, Seek}};
 
-use super::common::open_file;
+use super::{common::{new_error, open_file}, table::{CharacterGlyphMapping, TableReader, TableRecord}};
 
 #[derive(Debug)]
 pub struct OpenFontFile {
     file: String,
-    directory: TableDirectory
+    pub directory: TableDirectory,
+
+    glyph_map: CharacterGlyphMapping
 }
 
 impl OpenFontFile {
@@ -16,41 +18,34 @@ impl OpenFontFile {
 
         Ok(OpenFontFile {
             file: String::from(filepath),
+            glyph_map: OpenFontFile::read_table(&directory, &mut buf)?,
+
             directory
         })
     }
 
-    fn read_table<T>(data: &mut Bytes<T>) -> std::io::Result<()>
-        where T: std::io::Read
+    pub fn read_table<T>(directory: &TableDirectory, buf: &mut BufReader<File>) -> std::io::Result<T>
+        where T: TableReader
     {
-        let mut tag: u32 = 0;
+        if let Some(record ) = directory.records.get(&T::TAG) {
+            buf.seek(std::io::SeekFrom::Start(record.offset as u64))?;
+            let mut table_data = buf.by_ref().take(record.length as u64);
 
-        for byte in data.take(4) {
-            tag = (tag << 8) | (byte? as u32);
+            return T::read(record, &mut table_data)
         }
 
-        println!("{:#x}", tag);
-
-        Ok(())
+        Err(new_error!("Required table missing (tag: {})", T::TAG))
     }
 }
 
 #[derive(Debug)]
-struct TableRecord {
-    tag: u32,
-    checksum: u32,
-    offset: u32,
-    length: u32
-}
-
-#[derive(Debug)]
-struct TableDirectory {
+pub struct TableDirectory {
     sfnt_version: u32,
     num_tables: u16,
     search_range: u16,
     entry_selector: u16,
     range_shift: u16,
-    records: Vec<TableRecord>
+    pub records: HashMap<u32, TableRecord>
 }
 
 impl TableDirectory {
@@ -71,7 +66,7 @@ impl TableDirectory {
         let mut table_dir = TableDirectory {
             sfnt_version: version,
             num_tables, search_range, entry_selector, range_shift,
-            records: vec![]
+            records: HashMap::new()
         };
 
         table_dir.read_table_records(data)?;
@@ -82,7 +77,7 @@ impl TableDirectory {
     fn read_table_records(&mut self, data: &mut BufReader<File>) -> std::io::Result<()>{
         for _ in 0..self.num_tables {
             let record = read_single_table_record(data)?;
-            self.records.push(record);
+            self.records.insert(record.tag, record);
         }
 
         Ok(())
