@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufReader, Read}};
+use std::{fs::File, io::{BufReader, Read, Seek}};
 
 mod cmap;
 pub use cmap::CharacterGlyphMapping;
@@ -16,5 +16,5 @@ pub trait TableReader {
 
     fn read<T>(record: &TableRecord, buf: &mut T) -> std::io::Result<Self>
         where Self: Sized,
-              T: Read;
+              T: Read + Seek;
 }

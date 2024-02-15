@@ -18,3 +18,4 @@ pub fn open_file(path: &str) ->  std::io::Result<BufReader<File>> {
 
     Ok(file)
 }
+

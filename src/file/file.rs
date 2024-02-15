@@ -13,7 +13,7 @@ pub struct OpenFontFile {
 impl OpenFontFile {
     pub fn load(filepath: &str) -> std::io::Result<OpenFontFile> {
         let mut buf = open_file(filepath)?;
-        
+
         let directory = TableDirectory::read_from_buf(&mut buf)?;
 
         Ok(OpenFontFile {
@@ -29,9 +29,8 @@ impl OpenFontFile {
     {
         if let Some(record ) = directory.records.get(&T::TAG) {
             buf.seek(std::io::SeekFrom::Start(record.offset as u64))?;
-            let mut table_data = buf.by_ref().take(record.length as u64);
 
-            return T::read(record, &mut table_data)
+            return T::read(record, buf)
         }
 
         Err(new_error!("Required table missing (tag: {})", T::TAG))
