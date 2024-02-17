@@ -1,7 +1,10 @@
-use std::{fs::File, io::{BufReader, Read, Seek}};
+use std::io::{Read, Seek};
 
 mod cmap;
 pub use cmap::CharacterGlyphMapping;
+
+mod head;
+pub use head::FontHeader;
 
 #[derive(Debug)]
 pub struct TableRecord {

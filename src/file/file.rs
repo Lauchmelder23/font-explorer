@@ -1,13 +1,14 @@
 use std::{collections::HashMap, fs::File, io::{BufReader, Read, Seek}};
 
-use super::{common::{new_error, open_file}, table::{CharacterGlyphMapping, TableReader, TableRecord}};
+use super::{common::{new_error, open_file}, table::{CharacterGlyphMapping, FontHeader, TableReader, TableRecord}};
 
 #[derive(Debug)]
 pub struct OpenFontFile {
     file: String,
     pub directory: TableDirectory,
 
-    glyph_map: CharacterGlyphMapping
+    glyph_map:      CharacterGlyphMapping,
+    font_header:    FontHeader
 }
 
 impl OpenFontFile {
@@ -19,6 +20,7 @@ impl OpenFontFile {
         Ok(OpenFontFile {
             file: String::from(filepath),
             glyph_map: OpenFontFile::read_table(&directory, &mut buf)?,
+            font_header: OpenFontFile::read_table(&directory, &mut buf)?,
 
             directory
         })
