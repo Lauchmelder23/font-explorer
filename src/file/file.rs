@@ -1,98 +1,75 @@
-use std::{collections::HashMap, fs::File, io::{BufReader, Read, Seek}};
+use std::{borrow::{Borrow, BorrowMut}, collections::HashMap, fs::File, io::{Read, Seek}};
+use bincode::Options;
+use serde::Deserialize;
 
-use super::{common::{new_error, open_file}, table::{CharacterGlyphMapping, FontHeader, TableReader, TableRecord}};
+use super::error::{FontError, Result};
 
 #[derive(Debug)]
-pub struct OpenFontFile {
+pub struct OpenTypeFont {
     file: String,
-    pub directory: TableDirectory,
 
-    glyph_map:      CharacterGlyphMapping,
-    font_header:    FontHeader
 }
 
-impl OpenFontFile {
-    pub fn load(filepath: &str) -> std::io::Result<OpenFontFile> {
-        let mut buf = open_file(filepath)?;
+impl OpenTypeFont {
+    pub fn load(filepath: &str) -> Result<OpenTypeFont> {
+        let mut file = File::open(filepath)?;
 
-        let directory = TableDirectory::read_from_buf(&mut buf)?;
+        let table_dir = TableDirectory::load(&mut file)?;
+        dbg!(table_dir);
 
-        Ok(OpenFontFile {
-            file: String::from(filepath),
-            glyph_map: OpenFontFile::read_table(&directory, &mut buf)?,
-            font_header: OpenFontFile::read_table(&directory, &mut buf)?,
-
-            directory
+        Ok(OpenTypeFont {
+            file: String::from(filepath)
         })
     }
 
-    pub fn read_table<T>(directory: &TableDirectory, buf: &mut BufReader<File>) -> std::io::Result<T>
-        where T: TableReader
+    pub fn deserialize_from<T, R>(reader: &mut R) -> bincode::Result<T>
+        where R: Read,
+              T: serde::de::DeserializeOwned
     {
-        if let Some(record ) = directory.records.get(&T::TAG) {
-            buf.seek(std::io::SeekFrom::Start(record.offset as u64))?;
-
-            return T::read(record, buf)
-        }
-
-        Err(new_error!("Required table missing (tag: {})", T::TAG))
+        bincode::DefaultOptions::new()
+            .with_big_endian()
+            .with_fixint_encoding()
+            .deserialize_from(reader.by_ref())
     }
 }
 
-#[derive(Debug)]
-pub struct TableDirectory {
+
+#[derive(Deserialize, Debug, Default)]
+struct TableDirectory {
     sfnt_version: u32,
     num_tables: u16,
+
     search_range: u16,
     entry_selector: u16,
     range_shift: u16,
-    pub records: HashMap<u32, TableRecord>
+
+    #[serde(skip)]
+    tables: HashMap<u32, TableDirectoryEntry>
+}
+
+#[derive(Deserialize, Debug, Default)]
+struct TableDirectoryEntry {
+    tag: u32,
+    checksum: u32,
+    offset: u32,
+    length: u32
 }
 
 impl TableDirectory {
-    fn read_from_buf(data: &mut BufReader<File>) -> std::io::Result<TableDirectory> {
-        let mut buf: [u8; 12] = [0; 12];
-        data.read_exact(&mut buf)?;
+    fn load<T>(stream: &mut T) -> Result<TableDirectory> 
+        where T: Read + Seek 
+    {
+        let mut table_dir: TableDirectory = OpenTypeFont::deserialize_from(stream)?;
+        println!("{:?}", table_dir);
 
-        let version = u32::from_be_bytes(buf[0..4].try_into().unwrap());
-        if version != 0x10000 && version != 0x4F54544F {
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "unsupported snft version encountered"));
+        for _ in 0..table_dir.num_tables {
+            let table: TableDirectoryEntry = OpenTypeFont::deserialize_from(stream)?;
+
+            if let Some(_) = table_dir.tables.insert(table.tag, table) {
+                return Err(FontError::new((stream.stream_position()? as u32) - 16, "duplicate tag"))
+            };
         }
-
-        let num_tables = u16::from_be_bytes(buf[4..6].try_into().unwrap());
-        let search_range = u16::from_be_bytes(buf[6..8].try_into().unwrap());
-        let entry_selector = u16::from_be_bytes(buf[8..10].try_into().unwrap());
-        let range_shift = u16::from_be_bytes(buf[10..12].try_into().unwrap());
-
-        let mut table_dir = TableDirectory {
-            sfnt_version: version,
-            num_tables, search_range, entry_selector, range_shift,
-            records: HashMap::new()
-        };
-
-        table_dir.read_table_records(data)?;
 
         Ok(table_dir)
     }
-
-    fn read_table_records(&mut self, data: &mut BufReader<File>) -> std::io::Result<()>{
-        for _ in 0..self.num_tables {
-            let record = read_single_table_record(data)?;
-            self.records.insert(record.tag, record);
-        }
-
-        Ok(())
-    }
-}
-
-fn read_single_table_record(data: &mut BufReader<File>) -> std::io::Result<TableRecord> {
-    let mut buf: [u8; 4 * 4] = [0; 4 * 4];
-    data.read_exact(&mut buf)?;
-
-    Ok(TableRecord {
-        tag: u32::from_be_bytes(buf[0..4].try_into().unwrap()),
-        checksum: u32::from_be_bytes(buf[4..8].try_into().unwrap()),
-        offset: u32::from_be_bytes(buf[8..12].try_into().unwrap()),
-        length: u32::from_be_bytes(buf[12..16].try_into().unwrap())
-    })
 }

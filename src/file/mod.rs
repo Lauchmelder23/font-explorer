@@ -1,6 +1,4 @@
 pub mod file;
-mod common;
-mod table;
-mod typed_reader;
+mod error;
 
-pub use file::OpenFontFile;
+pub use file::OpenTypeFont;
