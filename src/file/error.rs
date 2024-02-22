@@ -3,7 +3,7 @@ use std::{error, result};
 
 #[derive(Debug)]
 pub enum FontError {
-    FontFormatError(u32, String),
+    FontFormatError(Option<u32>, String),
     IOError(std::io::Error),
     DeserializeError(bincode::Error)
 }
@@ -11,7 +11,7 @@ pub enum FontError {
 pub type Result<T> = result::Result<T, FontError>;
 
 impl FontError {
-    pub fn new(offset: u32, msg: &str) -> Self {
+    pub fn new(offset: Option<u32>, msg: &str) -> Self {
         FontError::FontFormatError(offset, msg.into())
     }
 }
@@ -19,7 +19,13 @@ impl FontError {
 impl fmt::Display for FontError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            FontError::FontFormatError(offset, msg) => write!(f, "Error in font file (at 0x{:08x}): {}", offset, msg),
+            FontError::FontFormatError(offset, msg) => {
+                write!(f, "Error in font file")?;
+                if let Some(value) = offset {
+                    write!(f, " (at 0x{:08x})", value)?;
+                }
+                write!(f, ": {}", msg)
+            },
             FontError::IOError(_) => write!(f, "IO error while reading font file"),
             FontError::DeserializeError(_) => write!(f, "Deserialiation error while reading font file")
         }
