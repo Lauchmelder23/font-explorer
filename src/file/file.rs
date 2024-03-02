@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs::File, io::{BufReader, Read, Seek}};
 use log::{debug, info};
 use serde::Deserialize;
 
-use crate::file::{self, error::FontError};
+use crate::file::{self, error::FontError, table::CmapHeader};
 
 use super::{error::Result, table::FontHeader};
 
@@ -45,12 +45,16 @@ impl OpenTypeFont {
             return Err(FontError::FontFormatError(None, format!("The following tables are required, but were missing from the table directory: {}", missing_tags)));
         }
 
+        let error_func = |tag: u32| { move || FontError::FontFormatError(None, format!("Missing table: 0x{:08}", tag)) };
+
         // Parse font header first (head)
         let tag: u32 = tag_to_int!("head");
-        let entry = table_dir.tables.remove(&tag)
-            .ok_or_else(|| FontError::FontFormatError(None, format!("Missing table: 0x{:08x}", tag)))?;
-    
+        let entry = table_dir.tables.remove(&tag).ok_or_else(error_func(tag))?;
         let header = FontHeader::load(entry, &mut stream)?;
+
+        let tag = tag_to_int!("cmap");
+        let entry = table_dir.tables.remove(&tag).ok_or_else(error_func(tag))?;
+        let mapping = CmapHeader::load(entry, &mut stream)?;
 
         Ok(OpenTypeFont {
             file: String::from(filepath)
@@ -75,8 +79,8 @@ struct TableDirectory {
 #[derive(Deserialize, Debug, Default)]
 pub struct TableDirectoryEntry {
     tag: u32,
-    checksum: u32,
-    offset: u32,
+    pub checksum: u32,
+    pub offset: u32,
     length: u32
 }
 

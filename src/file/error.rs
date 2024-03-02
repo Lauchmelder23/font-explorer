@@ -27,7 +27,7 @@ impl fmt::Display for FontError {
                 write!(f, ": {}", msg)
             },
             FontError::IOError(_) => write!(f, "IO error while reading font file"),
-            FontError::DeserializeError(_) => write!(f, "Deserialiation error while reading font file")
+            FontError::DeserializeError(_) => write!(f, "Deserialisation error while reading font file")
         }
     }
 }

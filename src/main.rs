@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use log::{error, info};
 
 use crate::file::OpenTypeFont;
@@ -11,6 +13,9 @@ fn main() {
         Ok(val) => val,
         Err(err) => { 
             error!("{}", err);
+            if let Some(inner) = err.source() {
+                error!("{}", inner);
+            }
             return;
         }
     };

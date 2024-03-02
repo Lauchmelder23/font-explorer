@@ -36,7 +36,8 @@ impl FontHeader {
     pub fn load<T>(dict_entry: TableDirectoryEntry, stream: &mut T) -> Result<FontHeader>
         where T: Read + Seek
     {
-        debug!("loading font header at 0x{:08x}", stream.stream_position()?);
+        debug!("loading font header at 0x{:08x}", dict_entry.offset);
+        stream.seek(std::io::SeekFrom::Start(dict_entry.offset as u64))?;
 
         let header: FontHeader = file::deserialize_from(stream)?;
         debug!("{:?}", header);
