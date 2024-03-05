@@ -1,6 +1,7 @@
-use std::io::{Read, Seek};
+mod delta_mapper;
 
-use bincode::deserialize;
+use std::{collections::HashMap, io::{Read, Seek}};
+
 use log::debug;
 use serde::Deserialize;
 
@@ -39,5 +40,33 @@ impl CmapHeader {
         debug!("{:?}", header);
 
         Ok(header)
+    }
+}
+
+// TODO: Really I shouldn't parse every code point into a hash map...
+// rather i sohuld return a handle to the file segment and perform a binary
+// search as inteded
+type CharacterMap = HashMap<char, u32>;
+
+pub fn load_character_map<T>(dict_entry: TableDirectoryEntry, stream: &mut T) -> Result<CharacterMap>
+    where T: Read + Seek
+{
+    debug!("loading character map at 0x{:08x}", dict_entry.offset);
+
+    let table_offset = dict_entry.offset as u64;
+    let header = CmapHeader::load(dict_entry, stream)?;
+
+    // For now only Unicode 2.0 BMP is supported
+    let Some(result) = 
+        header.encoding_records.iter()
+        .find(|item| item.platform_id == 0 && item.encoding_id == 3) 
+    else {
+        todo!();
+    };
+
+    stream.seek(std::io::SeekFrom::Start(table_offset + result.subtable_offset as u64))?;
+    match file::deserialize_from::<u16, _>(stream)? {
+        4 => delta_mapper::load(stream),
+        _ => todo!()
     }
 }

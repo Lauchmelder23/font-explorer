@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs::File, io::{BufReader, Read, Seek}};
 use log::{debug, info};
 use serde::Deserialize;
 
-use crate::file::{self, error::FontError, table::CmapHeader};
+use crate::file::{self, error::FontError, table::{mapping, CmapHeader}};
 
 use super::{error::Result, table::FontHeader};
 
@@ -54,7 +54,7 @@ impl OpenTypeFont {
 
         let tag = tag_to_int!("cmap");
         let entry = table_dir.tables.remove(&tag).ok_or_else(error_func(tag))?;
-        let mapping = CmapHeader::load(entry, &mut stream)?;
+        let mapping = mapping::load_character_map(entry, &mut stream)?;
 
         Ok(OpenTypeFont {
             file: String::from(filepath)
