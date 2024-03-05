@@ -85,8 +85,8 @@ pub struct TableDirectoryEntry {
 }
 
 impl TableDirectory {
-    fn load<T>(stream: &mut T) -> Result<TableDirectory> 
-        where T: Read + Seek 
+    fn load<S>(stream: &mut S) -> Result<TableDirectory> 
+        where S: Read + Seek 
     {
         debug!("loading font table directory at 0x{:08x}", stream.stream_position()?);
 

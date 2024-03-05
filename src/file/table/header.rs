@@ -33,8 +33,8 @@ pub struct FontHeader {
 }
 
 impl FontHeader {
-    pub fn load<T>(dict_entry: TableDirectoryEntry, stream: &mut T) -> Result<FontHeader>
-        where T: Read + Seek
+    pub fn load<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<FontHeader>
+        where S: Read + Seek
     {
         debug!("loading font header at 0x{:08x}", dict_entry.offset);
         stream.seek(std::io::SeekFrom::Start(dict_entry.offset as u64))?;

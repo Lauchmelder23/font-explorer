@@ -5,7 +5,7 @@ use std::{error, result};
 pub enum FontError {
     FontFormatError(Option<u32>, String),
     IOError(std::io::Error),
-    DeserializeError(bincode::Error)
+    DeserializeError(bincode::Error),
 }
 
 pub type Result<T> = result::Result<T, FontError>;

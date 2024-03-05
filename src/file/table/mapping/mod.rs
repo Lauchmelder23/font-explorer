@@ -24,8 +24,8 @@ pub struct CmapHeader {
 }
 
 impl CmapHeader {
-    pub fn load<T>(dict_entry: TableDirectoryEntry, stream: &mut T) -> Result<CmapHeader> 
-        where T: Read + Seek
+    pub fn load<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<CmapHeader> 
+        where S: Read + Seek
     {
         debug!("loading character map header at 0x{:08x}", dict_entry.offset);
         stream.seek(std::io::SeekFrom::Start(dict_entry.offset as u64))?;
@@ -46,10 +46,10 @@ impl CmapHeader {
 // TODO: Really I shouldn't parse every code point into a hash map...
 // rather i sohuld return a handle to the file segment and perform a binary
 // search as inteded
-type CharacterMap = HashMap<char, u32>;
+type CharacterMap = HashMap<char, u16>;
 
-pub fn load_character_map<T>(dict_entry: TableDirectoryEntry, stream: &mut T) -> Result<CharacterMap>
-    where T: Read + Seek
+pub fn load_character_map<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<CharacterMap>
+    where S: Read + Seek
 {
     debug!("loading character map at 0x{:08x}", dict_entry.offset);
 
