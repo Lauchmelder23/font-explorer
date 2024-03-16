@@ -2,9 +2,9 @@ use std::{collections::HashMap, fs::File, io::{BufReader, Read, Seek}};
 use log::{debug, info};
 use serde::Deserialize;
 
-use crate::file::{self, error::FontError, table::{mapping, CmapHeader}};
+use crate::file::{self, error::FontError};
 
-use super::{error::Result, table::FontHeader};
+use super::{error::Result, table::table::Table};
 
 macro_rules! tag_to_str {
     ($tag: expr) => ($tag.to_be_bytes().iter().map(|&byte| char::from(byte)).collect::<String>());
@@ -15,23 +15,32 @@ macro_rules! tag_to_int {
 }
 
 #[derive(Debug)]
-pub struct OpenTypeFont {
-    file: String,
-
+pub struct FontLoader<S> where
+    S: Read + Seek
+{
+    table_dir: TableDirectory,
+    stream: S
 }
-
-impl OpenTypeFont {
-    const REQUIRED_TAGS: [&'static str; 8] = ["cmap", "head", "hhea", "hmtx", "maxp", "name", "OS/2", "post"];
-
-    pub fn load(filepath: &str) -> Result<OpenTypeFont> {
+impl FontLoader<BufReader<File>> {
+    pub fn from_file(filepath: &str) -> Result<Self> {
         info!("loading font from file '{}'", filepath);
 
         let file = File::open(filepath)?;
         let mut stream = BufReader::new(file);
-    
+
+        Self::new(stream)
+    }
+}
+
+impl<S> FontLoader<S>
+    where S: Read + Seek
+{
+    const REQUIRED_TAGS: [&'static str; 8] = ["cmap", "head", "hhea", "hmtx", "maxp", "name", "OS/2", "post"];
+
+    pub fn new(mut stream: S) -> Result<Self> {
         let mut table_dir = TableDirectory::load(&mut stream)?;
 
-        let missing_tags = OpenTypeFont::REQUIRED_TAGS.iter()
+        let missing_tags = FontLoader::<S>::REQUIRED_TAGS.iter()
             .filter(|&tag| !table_dir.tables.contains_key(&tag_to_int!(tag)))
             .fold(String::new(), |left, &right| { 
                 if !left.is_empty() {
@@ -45,26 +54,25 @@ impl OpenTypeFont {
             return Err(FontError::FontFormatError(None, format!("The following tables are required, but were missing from the table directory: {}", missing_tags)));
         }
 
-        let error_func = |tag: u32| { move || FontError::FontFormatError(None, format!("Missing table: 0x{:08}", tag)) };
-
-        // Parse font header first (head)
-        let tag: u32 = tag_to_int!("head");
-        let entry = table_dir.tables.remove(&tag).ok_or_else(error_func(tag))?;
-        let header = FontHeader::load(entry, &mut stream)?;
-
-        let tag = tag_to_int!("cmap");
-        let entry = table_dir.tables.remove(&tag).ok_or_else(error_func(tag))?;
-        let mapping = mapping::load_character_map(entry, &mut stream)?;
-
-        Ok(OpenTypeFont {
-            file: String::from(filepath)
+        Ok(FontLoader {
+            table_dir,
+            stream
         })
+    }
+
+    pub fn load_table<T>(&mut self, tag: &str) -> Result<T>
+    where T: Table
+    {
+        let tag_id = tag_to_int!(tag);
+        let entry = self.table_dir.tables.remove(&tag_id)
+            .ok_or_else(move || FontError::FontFormatError(None, format!("Missing table 0x{:08}", tag_id)))?;
+
+        T::load(entry, &mut self.stream)
     }
 }
 
-
 #[derive(Deserialize, Debug, Default)]
-struct TableDirectory {
+pub struct TableDirectory {
     sfnt_version: u32,
     num_tables: u16,
 
@@ -85,7 +93,7 @@ pub struct TableDirectoryEntry {
 }
 
 impl TableDirectory {
-    fn load<S>(stream: &mut S) -> Result<TableDirectory> 
+    pub fn load<S>(stream: &mut S) -> Result<TableDirectory> 
         where S: Read + Seek 
     {
         debug!("loading font table directory at 0x{:08x}", stream.stream_position()?);

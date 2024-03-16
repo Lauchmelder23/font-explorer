@@ -1,5 +1,4 @@
-pub mod header;
-pub use header::FontHeader;
+pub mod table;
 
+pub mod header;
 pub mod mapping;
-pub use mapping::CmapHeader;

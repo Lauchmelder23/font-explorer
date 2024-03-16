@@ -1,10 +1,11 @@
-pub mod file;
+pub mod font;
 mod error;
+mod loader;
 
 use std::io::Read;
 use bincode::Options;
 
-pub use file::OpenTypeFont;
+pub use font::OpenTypeFont;
 mod table;
 
 pub fn deserialize_from<T, R>(reader: &mut R) -> bincode::Result<T>

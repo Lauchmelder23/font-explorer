@@ -3,7 +3,9 @@ use std::io::{Read, Seek};
 use log::{debug, warn};
 use serde::Deserialize;
 
-use crate::file::{self, error::Result, file::TableDirectoryEntry};
+use crate::file::{self, error::Result, loader::TableDirectoryEntry};
+
+use super::table::Table;
 
 #[derive(Debug, Copy, Clone, Deserialize)]
 struct BoundingBox {
@@ -32,8 +34,8 @@ pub struct FontHeader {
     glyph_data_format:      i16,
 }
 
-impl FontHeader {
-    pub fn load<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<FontHeader>
+impl Table for FontHeader {
+    fn load<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
         where S: Read + Seek
     {
         debug!("loading font header at 0x{:08x}", dict_entry.offset);
