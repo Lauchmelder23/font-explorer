@@ -8,6 +8,8 @@ use bincode::Options;
 pub use font::OpenTypeFont;
 mod table;
 
+mod outlines;
+
 pub fn deserialize_from<T, R>(reader: &mut R) -> bincode::Result<T>
     where R: Read,
           T: serde::de::DeserializeOwned

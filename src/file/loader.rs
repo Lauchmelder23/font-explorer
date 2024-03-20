@@ -69,11 +69,15 @@ impl<S> FontLoader<S>
 
         T::load(entry, &mut self.stream)
     }
+
+    pub fn get_table_dir(&self) -> &TableDirectory {
+        &self.table_dir
+    }
 }
 
 #[derive(Deserialize, Debug, Default)]
 pub struct TableDirectory {
-    sfnt_version: u32,
+    pub sfnt_version: u32,
     num_tables: u16,
 
     search_range: u16,
