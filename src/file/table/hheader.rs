@@ -36,12 +36,13 @@ pub struct HorizontalHeader {
 }
 
 impl Table for HorizontalHeader {
-    fn load<S>(entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
+    fn get_table_name() -> &'static str {
+        "Horizontal Header"
+    }
+
+    fn load_impl<S>(entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
             where S: Read + Seek
     {
-        debug!("loading horizontal header at 0x{:08}", entry.offset);
-        stream.seek(std::io::SeekFrom::Start(entry.offset as u64))?;
-
         let hheader: Self = deserialize_from(stream)?;
         debug!("{:?}", hheader);
 

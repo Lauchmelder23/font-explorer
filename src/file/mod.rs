@@ -1,4 +1,4 @@
-pub mod font;
+mod font;
 mod error;
 mod loader;
 

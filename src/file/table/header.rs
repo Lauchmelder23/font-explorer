@@ -35,12 +35,13 @@ pub struct FontHeader {
 }
 
 impl Table for FontHeader {
-    fn load<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
+    fn get_table_name() -> &'static str {
+        "Font Header"
+    }
+
+    fn load_impl<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
         where S: Read + Seek
     {
-        debug!("loading font header at 0x{:08x}", dict_entry.offset);
-        stream.seek(std::io::SeekFrom::Start(dict_entry.offset as u64))?;
-
         let header: FontHeader = file::deserialize_from(stream)?;
         debug!("{:?}", header);
 

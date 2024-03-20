@@ -51,11 +51,13 @@ impl CmapHeader {
 pub type CharacterMap = HashMap<char, u16>;
 
 impl Table for CharacterMap {
-    fn load<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
+    fn get_table_name() -> &'static str {
+        "Character To Glyph Mapping"
+    }
+
+    fn load_impl<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
         where S: Read + Seek
     {
-        debug!("loading character map at 0x{:08x}", dict_entry.offset);
-
         let table_offset = dict_entry.offset as u64;
         let header = CmapHeader::load(dict_entry, stream)?;
 
