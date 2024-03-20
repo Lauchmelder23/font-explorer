@@ -9,14 +9,19 @@ pub struct OpenTypeFont {
 }
 
 impl OpenTypeFont {
+    const REQUIRED_TAGS: [&'static str; 8] = ["cmap", "head", "hhea", "hmtx", "maxp", "name", "OS/2", "post"];
+
     pub fn load(filepath: &str) -> Result<OpenTypeFont> {
         let mut loader = FontLoader::from_file(filepath)?;
+
+        if let Some(missing_tags) = loader.check_tables_present(OpenTypeFont::REQUIRED_TAGS.iter()) {
+            return Err(FontError::FontFormatError(None, format!("The following tables are required, but were missing from the table directory: {}", missing_tags)));
+        }
 
         let log_and_none = |err: FontError| {
             error!("{}", err);
             None
         };
-
         // Parse font header first (head)
         let header: FontHeader                  = loader.load_table("head")?;
         let hheader: HorizontalHeader           = loader.load_table("hhea")?;

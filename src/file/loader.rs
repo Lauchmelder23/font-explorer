@@ -35,24 +35,8 @@ impl FontLoader<BufReader<File>> {
 impl<S> FontLoader<S>
     where S: Read + Seek
 {
-    const REQUIRED_TAGS: [&'static str; 8] = ["cmap", "head", "hhea", "hmtx", "maxp", "name", "OS/2", "post"];
-
     pub fn new(mut stream: S) -> Result<Self> {
         let mut table_dir = TableDirectory::load(&mut stream)?;
-
-        let missing_tags = FontLoader::<S>::REQUIRED_TAGS.iter()
-            .filter(|&tag| !table_dir.tables.contains_key(&tag_to_int!(tag)))
-            .fold(String::new(), |left, &right| { 
-                if !left.is_empty() {
-                    format!(", {}", right)
-                } else {
-                    String::from(right)
-                }
-            });
-
-        if !missing_tags.is_empty() {
-            return Err(FontError::FontFormatError(None, format!("The following tables are required, but were missing from the table directory: {}", missing_tags)));
-        }
 
         Ok(FontLoader {
             table_dir,
@@ -72,6 +56,26 @@ impl<S> FontLoader<S>
 
     pub fn get_table_dir(&self) -> &TableDirectory {
         &self.table_dir
+    }
+
+    pub fn check_tables_present<'a, I>(&self, tables: I) -> Option<String>
+        where I: Iterator<Item = &'a&'a str>
+    {
+        let missing_tags = tables
+            .filter(|&tag| !self.table_dir.tables.contains_key(&tag_to_int!(tag)))
+            .fold(String::new(), |left, &right| { 
+                if !left.is_empty() {
+                    format!(", {}", right)
+                } else {
+                    String::from(right)
+                }
+            });
+
+        if !missing_tags.is_empty() {
+            return Some(missing_tags)
+        }
+
+        None
     }
 }
 
@@ -115,5 +119,9 @@ impl TableDirectory {
         }
 
         Ok(table_dir)
+    }
+
+    pub fn get_tables(&self) -> &HashMap<u32, TableDirectoryEntry> {
+        &self.tables
     }
 }
