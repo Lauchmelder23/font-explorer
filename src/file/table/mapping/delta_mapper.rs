@@ -67,8 +67,9 @@ pub fn load<S>(stream: &mut S) -> Result<CharacterMap>
     let glyphs_start = stream.stream_position()?;
     let mut char_map = CharacterMap::new();
 
+    debug!("segments found: ");
     for (i, (start, end, delta, offset)) in izip!(start_table, end_table, delta_table, offsets_table).enumerate() {
-        debug!("found segment {:04X}-{:04X} ({} codepoints). offset={}, delta={}", start, end, end-start+1, offset, delta);
+        debug!("    + {:04X}-{:04X} ({} codepoints)\toffset={},\tdelta={}", start, end, end-start+1, offset, delta);
         if offset == 0 {
             process_segment(start, end, &mut char_map, |codepoint: u16| Ok::<u16, FontError>(codepoint.wrapping_add_signed(delta)))?;
         } else {
