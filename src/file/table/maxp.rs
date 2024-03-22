@@ -9,25 +9,25 @@ use super::table::Table;
 
 #[derive(Debug, Clone, Copy, Deserialize)]
 pub struct MaxpV05 {
-    num_glyphs: u16
+    pub num_glyphs: u16
 }
 
 #[derive(Debug, Clone, Copy, Deserialize)]
 pub struct MaxpV10 {
-    num_glyphs:             u16,
-    points:                 u16,
-    contours:               u16,
-    composite_points:       u16,
-    composite_contours:     u16,
-    zones:                  u16,
-    twilight_points:        u16,
-    storage:                u16,
-    function_defs:          u16,
-    instruction_defs:       u16,
-    stack_elements:         u16,
-    size_of_instructions:   u16,
-    component_elements:     u16,
-    component_depth:        u16
+    pub num_glyphs:             u16,
+    pub points:                 u16,
+    pub contours:               u16,
+    pub composite_points:       u16,
+    pub composite_contours:     u16,
+    pub zones:                  u16,
+    pub twilight_points:        u16,
+    pub storage:                u16,
+    pub function_defs:          u16,
+    pub instruction_defs:       u16,
+    pub stack_elements:         u16,
+    pub size_of_instructions:   u16,
+    pub component_elements:     u16,
+    pub component_depth:        u16
 }
 
 #[derive(Debug, Clone, Copy)]

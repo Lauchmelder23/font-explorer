@@ -42,14 +42,14 @@ impl<S> FontLoader<S>
         })
     }
 
-    pub fn load_table<T>(&mut self, tag: &str) -> Result<T>
+    pub fn load_table<T>(&mut self, tag: &str, user_data: T::UserArgsType) -> Result<T>
     where T: Table
     {
         let tag_id = tag_to_int!(tag);
         let entry = self.table_dir.tables.remove(&tag_id)
             .ok_or_else(move || FontError::FontFormatError(None, format!("Missing table 0x{:08}", tag_id)))?;
 
-        T::load(entry, &mut self.stream)
+        T::load(entry, &mut self.stream, user_data)
     }
 
     pub fn get_table_dir(&self) -> &TableDirectory {
