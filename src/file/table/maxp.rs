@@ -37,11 +37,13 @@ pub enum MaximumProfile {
 }
 
 impl Table for MaximumProfile {
+    type UserArgsType = ();
+
     fn get_table_name() -> &'static str {
         "Maximum Profile"
     }
 
-    fn load_impl<S>(entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
+    fn load_impl<S>(entry: TableDirectoryEntry, stream: &mut S, user_data: Self::UserArgsType) -> Result<Self>
         where S: Read + Seek
     {
         let version: u32 = deserialize_from(stream)?;

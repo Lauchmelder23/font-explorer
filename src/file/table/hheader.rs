@@ -36,11 +36,13 @@ pub struct HorizontalHeader {
 }
 
 impl Table for HorizontalHeader {
+    type UserArgsType = ();
+
     fn get_table_name() -> &'static str {
         "Horizontal Header"
     }
 
-    fn load_impl<S>(entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
+    fn load_impl<S>(entry: TableDirectoryEntry, stream: &mut S, user_data: Self::UserArgsType) -> Result<Self>
             where S: Read + Seek
     {
         let hheader: Self = deserialize_from(stream)?;

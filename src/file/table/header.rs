@@ -35,11 +35,13 @@ pub struct FontHeader {
 }
 
 impl Table for FontHeader {
+    type UserArgsType = ();
+
     fn get_table_name() -> &'static str {
         "Font Header"
     }
 
-    fn load_impl<S>(dict_entry: TableDirectoryEntry, stream: &mut S) -> Result<Self>
+    fn load_impl<S>(dict_entry: TableDirectoryEntry, stream: &mut S, user_data: Self::UserArgsType) -> Result<Self>
         where S: Read + Seek
     {
         let header: FontHeader = file::deserialize_from(stream)?;
