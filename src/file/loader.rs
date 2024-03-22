@@ -2,9 +2,7 @@ use std::{collections::HashMap, fs::File, io::{BufReader, Read, Seek}};
 use log::{debug, info};
 use serde::Deserialize;
 
-use crate::file::{self, error::FontError};
-
-use super::{error::Result, table::table::Table};
+use crate::file::{self, table::Table, error::{Result, FontError}};
 
 macro_rules! tag_to_str {
     ($tag: expr) => ($tag.to_be_bytes().iter().map(|&byte| char::from(byte)).collect::<String>());

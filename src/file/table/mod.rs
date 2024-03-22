@@ -1,6 +1,17 @@
-pub mod table;
+mod table;
+pub use table::Table;
 
-pub mod header;
-pub mod mapping;
-pub mod hheader;
-pub mod maxp;
+mod header;
+pub use header::FontHeader;
+
+mod hheader;
+pub use hheader::{Caret, HorizontalHeader, MinSideBearing};
+
+mod maxp;
+pub use maxp::{MaximumProfile, MaxpV05, MaxpV10};
+
+mod mapping;
+pub use mapping::{CmapHeader, CharacterMap};
+
+mod truetype;
+pub use truetype::Locations;

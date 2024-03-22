@@ -2,7 +2,7 @@ use std::io::{Read, Seek};
 
 use log::debug;
 
-use crate::file::{error::{FontError, Result}, loader::FontLoader};
+use crate::file::{error::{FontError, Result}, loader::FontLoader, table::Locations};
 
 #[derive(Debug, Clone, Copy)]
 pub struct TrueType {
@@ -20,6 +20,8 @@ impl TrueType {
         if let Some(missing_tags) = loader.check_tables_present(TrueType::REQUIRED_TAGS.iter()) {
             return Err(FontError::FontFormatError(None, format!("The following tables are required, but were missing from the table directory: {}", missing_tags)));
         }
+
+        let locations = Locations{};
 
         Ok(TrueType {})
     }

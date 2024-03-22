@@ -5,9 +5,7 @@ use std::{collections::HashMap, io::{Read, Seek}};
 use log::debug;
 use serde::Deserialize;
 
-use crate::file::{self, error::Result, loader::TableDirectoryEntry};
-
-use super::table::Table;
+use crate::file::{self, table::Table, error::Result, loader::TableDirectoryEntry};
 
 #[derive(Debug, Deserialize, Copy, Clone, Default)]
 struct EncodingRecord {

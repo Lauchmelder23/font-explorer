@@ -1,6 +1,6 @@
 use log::{debug, error};
 
-use crate::file::{error::{FontError, Result}, loader::FontLoader, outlines::{self, Outlines}, table::{header::FontHeader, hheader::HorizontalHeader, mapping::CharacterMap, maxp::MaximumProfile}};
+use crate::file::{error::{FontError, Result}, loader::FontLoader, outlines::{self, Outlines}, table::{FontHeader, HorizontalHeader, CharacterMap, MaximumProfile}};
 
 #[derive(Debug)]
 pub struct OpenTypeFont {
