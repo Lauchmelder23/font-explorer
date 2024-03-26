@@ -3,17 +3,9 @@ use std::io::{Read, Seek};
 use log::{debug, warn};
 use serde::Deserialize;
 
-use crate::file::{self, error::Result, loader::TableDirectoryEntry};
+use crate::file::{self, error::Result, loader::TableDirectoryEntry, BoundingBox};
 
 use super::table::Table;
-
-#[derive(Debug, Copy, Clone, Deserialize)]
-pub struct BoundingBox {
-    pub left: i16,
-    pub bottom: i16,
-    pub right: i16,
-    pub top: i16
-}
 
 #[derive(Debug, Clone, Copy, Deserialize)]
 pub struct FontHeader {

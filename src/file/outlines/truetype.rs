@@ -2,7 +2,7 @@ use std::io::{Read, Seek};
 
 use log::debug;
 
-use crate::file::{error::{FontError, Result}, loader::FontLoader, table::{FontHeader, Locations, MaximumProfile, MaxpV05, Table}};
+use crate::file::{error::{FontError, Result}, loader::FontLoader, table::{FontHeader, Glyphs, Locations, MaximumProfile, MaxpV05, Table}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct TrueType {
@@ -27,6 +27,7 @@ impl TrueType {
         };
 
         let locations: Locations = loader.load_table("loca", (header.index_to_loc_format, num_glyphs))?;
+        let glyphs: Glyphs = loader.load_table("glyf", num_glyphs)?;
 
         Ok(TrueType {})
     }

@@ -14,4 +14,4 @@ mod mapping;
 pub use mapping::{CmapHeader, CharacterMap};
 
 mod truetype;
-pub use truetype::Locations;
+pub use truetype::{Locations, Glyph, Glyphs, GlyphDescription, SimpleGlyph, CompositeGlyph};

@@ -18,14 +18,20 @@ impl Table for Locations {
         match format {
             0 => {
                 let mut locations: Vec<u16> = Vec::with_capacity(num_glyphs as usize + 1);
-                locations = deserialize_from(stream)?;
+
+                for _ in 0..locations.capacity() {
+                    locations.push(deserialize_from(stream)?);
+                }
 
                 let locations = locations.iter().map(|&offset| 2*(offset as u32)).collect::<Vec<u32>>();
                 Ok(locations)
             },
             1 => {
                 let mut locations: Vec<u32> = Vec::with_capacity(num_glyphs as usize + 1);
-                locations = deserialize_from(stream)?;
+
+                for _ in 0..locations.capacity() {
+                    locations.push(deserialize_from(stream)?);
+                }
 
                 Ok(locations)
             },
